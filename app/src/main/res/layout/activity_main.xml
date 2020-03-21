@@ -9,45 +9,54 @@
     <include
         android:id="@+id/tile"
         layout="@layout/tile"
-        android:layout_width="374dp"
-        android:layout_height="420dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
         android:layout_marginEnd="10dp"
-        android:layout_marginBottom="1dp"
+        android:layout_marginBottom="10dp"
         android:layout_weight="1"
-        android:visibility="visible"
         android:elevation="5dp"
+        android:visibility="visible"
         app:layout_constraintBottom_toTopOf="@+id/linearLayout"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.47"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.546" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
         android:id="@+id/linearLayout"
         android:layout_width="404dp"
-        android:layout_height="191dp"
+        android:layout_height="110dp"
         android:orientation="horizontal"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <Button
-            android:id="@+id/button"
-            android:layout_width="0dp"
-            android:layout_height="174dp"
+        <ImageButton
+            android:id="@+id/imageButton2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:layout_weight="1"
+            android:background="#00FFFFFF"
             android:onClick="onNo"
-            android:text="No" />
+            android:scaleType="fitCenter"
+            app:srcCompat="@drawable/dismiss" />
 
-        <Button
-            android:id="@+id/button2"
-            android:layout_width="0dp"
-            android:layout_height="166dp"
+        <ImageButton
+            android:id="@+id/imageButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:layout_weight="1"
+            android:background="#00FFFFFF"
             android:onClick="onYes"
-            android:text="Yes" />
+            android:scaleType="fitCenter"
+            app:srcCompat="@drawable/accept" />
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
