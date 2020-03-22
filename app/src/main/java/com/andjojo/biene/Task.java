@@ -27,8 +27,19 @@ public class Task implements Serializable {
         this.userID= task.getString("req_user_id");
         this.userName= task.getString("req_vorname");
     }
+
     public Task(String taskName){
         this.taskName = taskName;
+        this.taskName = "";
+        this.cat= "";
+            taskHeader="";
+        this.taskDescription="";
+        this.userID= "";
+        this.userName= "";
+    }
+
+    public void setUserID(String userID){
+        this.userID = userID;
     }
 
     public String getTaskName(){

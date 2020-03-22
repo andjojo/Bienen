@@ -12,7 +12,8 @@
         android:id="@+id/imageView2"
         android:layout_width="match_parent"
         android:layout_height="200dp"
-        app:srcCompat="@drawable/shopping" />
+        android:layout_marginTop="10dp"
+        app:srcCompat="@drawable/relax" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -27,7 +28,7 @@
             android:layout_weight="1"
             android:gravity="center"
             android:paddingTop="20dp"
-            android:text="Titel"
+            android:text="Kein Job"
             android:textSize="18sp"
             android:textStyle="bold" />
 
@@ -41,6 +42,6 @@
         android:layout_marginRight="10dp"
         android:layout_weight="1"
         android:gravity="center"
-        android:text="TextView" />
+        android:text="Im Moment braucht niemand deine Hilfe - mach dir einen schönen Tag!" />
 
 </LinearLayout>

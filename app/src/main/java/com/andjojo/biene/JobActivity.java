@@ -14,8 +14,10 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -32,16 +34,17 @@ import java.net.URL;
 public class JobActivity extends AppCompatActivity {
 
 
-    String urlString = "http://18.194.159.113:5001/api/job_accept/?req_user_id=MaxLuithardtLindenäckerstraße&hero_phone=17215215214&hero_user_id=SUperHero&hero_vorname=Jochen&hero_nachname=Super&hero_adresse=HAuptstraße7&est_time=60";
+    String urlString = "http://18.194.159.113:5001/api/job_accept/?req_user_id=";
     ProgressDialog dialog;
     Task task;
-    TextView Header,Beschreibung;
+    TextView Header,Beschreibung,infotext;
     String phonenumber = "0176 57884499";
     Boolean cangoBack = false;
     LinearLayout linearLayout;
     SharedPreferences sp;
-    SharedPreferences.Editor editor;
     int counter = 0;
+    ImageView imageView;
+    ImageButton telephone,finishtask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,15 +58,20 @@ public class JobActivity extends AppCompatActivity {
                 .scaleY(0)
                 .setDuration(0);
 
-        sp = this.getSharedPreferences(
+        sp = getApplicationContext().getSharedPreferences(
                 "Biene", Context.MODE_PRIVATE);
-        editor = sp.edit();
-        editor.putBoolean("", cangoBack);
+
         Intent intent = getIntent();
         task = (Task) intent.getSerializableExtra("Task");
+        if (task==null){
+            task = new Task("Du musst noch was erledigen");
+            task.setUserID(sp.getString("userID",""));
+        }else{
+            sp.edit().putString("userID",task.getUserID()).apply();
+        }
         URL url = null;
         try {
-            url = new URL(urlString + "");
+            url = new URL(urlString+task.getUserID()+"&hero_phone=17215215214&hero_user_id=SUperHero&hero_vorname=Jochen&hero_nachname=Super&hero_adresse=HAuptstraße7&est_time=60");
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
@@ -72,13 +80,89 @@ public class JobActivity extends AppCompatActivity {
                 "Bzzz...Bzzzz...Bzzzz...", true);
         Header = (TextView) findViewById(R.id.textView4);
         Beschreibung = (TextView) findViewById(R.id.textView5);
+        infotext = (TextView) findViewById(R.id.textView3);
+        telephone = (ImageButton) findViewById(R.id.imageButton3);
+        finishtask = (ImageButton) findViewById(R.id.imageButton4);
+        imageView = (ImageView) findViewById(R.id.imageView);
         Header.setText(task.getUserName()+", "+task.getTaskHeader());
         Beschreibung.setText(task.getTaskDescription());
+        if(sp.getBoolean("calledAlready",false)){
+            finishtask.setVisibility(View.VISIBLE);
+        }
+
+        if (task.getCat().equals("Soziales"))
+            imageView.setImageResource(R.drawable.social);
+        else if (task.getCat().equals("Einkaufen"))
+            imageView.setImageResource(R.drawable.shopping);
+        else
+            imageView.setImageResource(R.drawable.others);
+
+
+        telephone.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if(event.getAction() == MotionEvent.ACTION_DOWN){
+
+                    v.animate()
+                            .scaleXBy(-0.04f)
+                            .scaleYBy(-0.04f)
+                            .setDuration(200)
+                            .withEndAction(new Runnable() {
+                                @Override
+                                public void run() {
+
+
+                                }
+                            });
+                    return true;
+                }
+                if(event.getAction() == MotionEvent.ACTION_UP){
+
+                    v.animate()
+                            .scaleX(1)
+                            .scaleY(1)
+                            .setDuration(200);
+                    onCall(v);
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        finishtask.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if(event.getAction() == MotionEvent.ACTION_DOWN){
+
+                    v.animate()
+                            .scaleXBy(-0.04f)
+                            .scaleYBy(-0.04f)
+                            .setDuration(200)
+                            .withEndAction(new Runnable() {
+                                @Override
+                                public void run() {
+
+
+                                }
+                            });
+                    return true;
+                }
+                if(event.getAction() == MotionEvent.ACTION_UP){
+
+                    v.animate()
+                            .scaleX(1)
+                            .scaleY(1)
+                            .setDuration(200);
+                    onFinishTask(v);
+                    return true;
+                }
+                return false;
+            }
+        });
     }
 
     @Override
     public void onBackPressed() {
-        if (cangoBack)super.onBackPressed();
     }
 
     public void onEscape(View v){
@@ -90,7 +174,13 @@ public class JobActivity extends AppCompatActivity {
                 // The dialog is automatically dismissed when a dialog button is clicked.
                 .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        JobActivity.super.onBackPressed();
+                        URL url = null;
+                        try {
+                            url = new URL("http://18.194.159.113:5001/api/abort_job/?req_user_id="+task.getUserID()+"&task=Einkaufen");
+                        } catch (MalformedURLException e) {
+                            e.printStackTrace();
+                        }
+                        new DownloadFilesTask(url, handlePHPResult).execute("");
                     }
                 })
 
@@ -103,30 +193,11 @@ public class JobActivity extends AppCompatActivity {
         super.onResume();
         if (cangoBack){
             if (counter>0) { Handler handler = new Handler();
+
                 handler.postDelayed(new Runnable() {
                     public void run() {
-                        new AlertDialog.Builder(JobActivity.this)
-                                .setTitle("Fleißiges Bienchen?")
-                                .setMessage("Konntest du weiterhelfen und kann die Anzeige offline gehen?")
-
-                                // Specifying a listener allows you to take an action before dismissing the dialog.
-                                // The dialog is automatically dismissed when a dialog button is clicked.
-                                .setPositiveButton("Ja!", new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        // Continue with delete operation
-                                        URL url = null;
-                                        try {
-                                            url = new URL("http://18.194.159.113:5001/api/job_finished/?req_user_id="+task.getUserID()+"&task=Einkaufen");
-                                        } catch (MalformedURLException e) {
-                                            e.printStackTrace();
-                                        }
-                                        new DownloadFilesTask(url, handlePHPResult).execute("");
-                                    }
-                                })
-
-                                // A null listener allows the button to dismiss the dialog and take no further action.
-                                .setNegativeButton("noch Nicht", null)
-                                .show();
+                        infotext.setText("Wenn du mit deinem Job fertig bist, drücke auf den Honigtopf :)");
+                        finishtask.setVisibility(View.VISIBLE);
                     }
                 }, 500);
                 /**/
@@ -134,6 +205,30 @@ public class JobActivity extends AppCompatActivity {
                 counter++;
             }
         }
+    }
+
+    public void onFinishTask(View v){
+        new AlertDialog.Builder(JobActivity.this)
+                .setTitle("Aufgabe erledigt?")
+                .setMessage("Hast du die Aufgabe zufriedenstellend beendet und kann sie als erledigt markiert werden?")
+
+                // Specifying a listener allows you to take an action before dismissing the dialog.
+                // The dialog is automatically dismissed when a dialog button is clicked.
+                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        URL url = null;
+                        try {
+                            url = new URL("http://18.194.159.113:5001/api/job_finished/?req_user_id="+task.getUserID());
+                        } catch (MalformedURLException e) {
+                            e.printStackTrace();
+                        }
+                        new DownloadFilesTask(url, handlePHPResult).execute("");
+                    }
+                })
+
+                // A null listener allows the button to dismiss the dialog and take no further action.
+                .setNegativeButton("Abbrechen", null)
+                .show();
     }
 
     public void onCall(View v) {
@@ -152,7 +247,7 @@ public class JobActivity extends AppCompatActivity {
         }else{
             startActivity(callIntent);
             cangoBack = true;
-            editor.putBoolean("", cangoBack);
+            sp.edit().putBoolean("calledAlready",true).apply();
         }
 
     }
@@ -163,15 +258,30 @@ public class JobActivity extends AppCompatActivity {
         //JSONObject jsonTask = new JSONObject(s);
         //phonenumber = jsonTask.getString("req_phone_number");
         if (url.toString().contains("job_finished")){
-
             JobActivity.super.onBackPressed();
+            sp.edit().putBoolean("calledAlready",false).apply();
+            sp.edit().putBoolean("taskActive",false).apply();
+            sp.edit().putInt("level",sp.getInt("level",0)+1).apply();
         }
-        if (url.toString().contains("job_accept")){
+
+        else if (url.toString().contains("job_accept")){
+            JSONArray jsonTaskArray = new JSONArray(s);
+            JSONObject jsonTask = jsonTaskArray.getJSONObject(0);
+            phonenumber = jsonTask.getString("req_phone_nummber");
             linearLayout.setVisibility(View.VISIBLE);
             linearLayout.animate()
                     .scaleX(1)
                     .scaleY(1)
                     .setDuration(200);
+            task = new Task(jsonTask);
+            Header.setText(task.getUserName()+", "+task.getTaskHeader());
+            Beschreibung.setText(task.getTaskDescription());
+            sp.edit().putString("userID",task.getUserID()).apply();
+        }
+        else if (url.toString().contains("abort_job")){
+            super.onBackPressed();
+            sp.edit().putBoolean("calledAlready",false).apply();
+            sp.edit().putBoolean("taskActive",false).apply();
         }
     };
 }

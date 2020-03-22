@@ -8,12 +8,14 @@ import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.util.Log;
@@ -55,6 +57,9 @@ public class MainActivity extends AppCompatActivity {
     Boolean firstGps = true;
     ImageButton dismiss,accept;
     ImageView imageView;
+    SharedPreferences sp;
+    SharedPreferences.Editor editor;
+    int level = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +68,10 @@ public class MainActivity extends AppCompatActivity {
         dialog = ProgressDialog.show(this, "",
                 "Blümchen werden erschnuppert...", true);
         mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+
+        sp = getApplicationContext().getSharedPreferences(
+                "Biene", Context.MODE_PRIVATE);
+        editor = sp.edit();
 
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
@@ -141,6 +150,12 @@ public class MainActivity extends AppCompatActivity {
         taskDescription = (TextView) findViewById(R.id.textView2);
         taskStack = new ArrayList<Task>();
 
+        if(sp.getBoolean("taskActive",false)){
+            Intent intent = new Intent(MainActivity.this, JobActivity.class);
+            //intent.putExtra("Task", taskStack.get(0));
+            startActivity(intent);
+        }
+
         /*if (Build.VERSION.SDK_INT >= 23) {
             if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
                // Log.v(TAG, "Permission is granted");
@@ -185,7 +200,7 @@ public class MainActivity extends AppCompatActivity {
                 double latitude = location.getLatitude();
                 double longitude = location.getLongitude();
                 String msg = "New Latitude: " + latitude + "New Longitude: " + longitude;
-                Toast.makeText(getBaseContext(), msg, Toast.LENGTH_LONG).show();
+                //Toast.makeText(getBaseContext(), msg, Toast.LENGTH_LONG).show();
                 URL url = null;
                 try {
                     url = new URL(urlString );//+ "?lat="+latitude+"&lon="+longitude+"&radius=0.005");
@@ -222,6 +237,7 @@ public class MainActivity extends AppCompatActivity {
                 .withEndAction(new Runnable() {
             @Override
             public void run() {
+                sp.edit().putBoolean("taskActive",true).apply();
                 Intent intent = new Intent(MainActivity.this, JobActivity.class);
                 intent.putExtra("Task", taskStack.get(0));
                 startActivity(intent);
@@ -260,6 +276,23 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (level<sp.getInt("level",0)&&level!=-1){
+            URL url = null;
+            try {
+                url = new URL(urlString );//+ "?lat="+latitude+"&lon="+longitude+"&radius=0.005");
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+            new DownloadFilesTask(url, handlePHPResult).execute("");
+            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+            startActivity(intent);
+        }
+        level = sp.getInt("level",0);
+    }
+
     public void showNextTask(){
         taskTitle.setText(taskStack.get(0).getTaskHeader());
         taskDescription.setText(taskStack.get(0).getTaskDescription());
@@ -267,16 +300,23 @@ public class MainActivity extends AppCompatActivity {
             imageView.setImageResource(R.drawable.social);
         else if (taskStack.get(0).getCat().equals("Einkaufen"))
             imageView.setImageResource(R.drawable.shopping);
+        else
+            imageView.setImageResource(R.drawable.others);
     }
 
     public HandlePHPResult handlePHPResult=(s, url)->{
         dialog.dismiss();
         JSONArray jsonTasks = new JSONArray(s);
+        taskStack.clear();
         for (int i=0;i<jsonTasks.length();i++){
             JSONObject task = jsonTasks.getJSONObject(i);
             taskStack.add(new Task(task));
         }
-        showNextTask();
+        if (taskStack.size()>0) showNextTask();
+        else {
+            Toast.makeText(this, "Keine Hilfegesuche gefunden",
+                    Toast.LENGTH_LONG).show();
+        }
         /*for (int i=0;i<10;i++){
             taskStack.add(new Task("task "+i));
         }*/

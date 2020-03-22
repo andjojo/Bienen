@@ -44,7 +44,7 @@
             android:background="#00FFFFFF"
             android:onClick="onNo"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/dismiss" />
+            app:srcCompat="@drawable/left" />
 
         <ImageButton
             android:id="@+id/imageButton"
@@ -55,7 +55,7 @@
             android:background="#00FFFFFF"
             android:onClick="onYes"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/accept" />
+            app:srcCompat="@drawable/beeright" />
 
     </LinearLayout>
 
